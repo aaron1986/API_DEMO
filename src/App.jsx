@@ -1,36 +1,42 @@
 import { useState } from 'react';
 import './App.css';
 import axios from 'axios';
+import Map from './Map';
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 function App() {
   const [locationdata, setLocationData] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
+  const [locationQuery, setLocationQuery] = useState('');
+  const [lat, setLat] = useState(null);
+  const [lon, setLon] = useState(null);
 
   const getData = () => {
-    // Send a request to the LocationIQ API with latitude and longitude
-    axios.get(`https://us1.locationiq.com/v1/reverse.php?key=${API_KEY}&lat=${latitude}&lon=${longitude}&format=json`)
+    axios.get(`https://us1.locationiq.com/v1/search.php?key=${API_KEY}&q=${locationQuery}&format=json`)
       .then(response => {
-        const displayName = response.data.display_name;
-        setLocationData(displayName);
+        const { lat, lon } = response.data[0];
+        setLocationData(`Latitude: ${lat}, Longitude: ${lon}`);
+        setLat(lat);
+        setLon(lon);
       })
       .catch(error => {
         console.error(error);
       });
   };
 
-  const handleLatitudeChange = event => {
-    setLatitude(event.target.value);
-  };
-
-  const handleLongitudeChange = event => {
-    setLongitude(event.target.value);
+  const handleLocationQueryChange = event => {
+    setLocationQuery(event.target.value);
   };
 
   const handleSubmit = event => {
     event.preventDefault();
     getData();
+  };
+
+  const handleReset = () => {
+    setLocationQuery('');
+    setLocationData('');
+    setLat(null);
+    setLon(null);
   };
 
   return (
@@ -39,18 +45,19 @@ function App() {
       <div>
         <form onSubmit={handleSubmit}>
           <input
-            placeholder="Latitude"
-            value={latitude}
-            onChange={handleLatitudeChange}
-          />
-          <input
-            placeholder="Longitude"
-            value={longitude}
-            onChange={handleLongitudeChange}
+            placeholder="Location"
+            value={locationQuery}
+            onChange={handleLocationQueryChange}
           />
           <button type="submit">Get Location</button>
         </form>
         {locationdata ? <h2>{locationdata}</h2> : null}
+        {lat && lon && <Map lat={lat} lon={lon} />}
+
+<div id="button-container">
+<button id="reset" onClick={handleReset}>Reset</button>
+</div>
+        
       </div>
     </>
   );
